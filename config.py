@@ -13,6 +13,7 @@ def get_ip():
         IP = s.getsockname()[0]
     except Exception:
         IP = '127.0.0.1'
+        print("Exception in get_ip.. need to dig into this more")
     finally:
         s.close()
     return IP
@@ -24,7 +25,7 @@ def update_callback(self):
 async def startIt(IP, ssid, pword):
     #asyncio.wait(BonairePyClimate(loop, IP, ssid, pword))
     climate = BonairePyClimate(loop, IP, ssid, pword)
-    await asyncio.sleep(300)
+    await asyncio.sleep(90)
     return climate
 
 IP = get_ip()

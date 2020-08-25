@@ -7,7 +7,6 @@ import xml.etree.ElementTree
 
 DELETE = "<myclimate><delete>connection</delete></myclimate>"
 DISCOVERY = "<myclimate><get>discovery</get><ip>{}</ip><platform>android</platform><version>1.0.0</version></myclimate>"
-GETZONEINFO = "<myclimate><get>getzoneinfo</get><zoneList>1,2</zoneList></myclimate>"
 INSTALLATION = "<myclimate><get>installation</get></myclimate>"
 LOCAL_PORT = 10003
 PROVISION = "<myclimate><post>provision</post><ssid>{}</ssid><password>{}</password><user>...</user><key>1234567890</key></myclimate>"
@@ -50,13 +49,11 @@ class HandleServer(asyncio.Protocol):
         print("Server data received: {}".format(message))
         root = xml.etree.ElementTree.fromstring(message)
 
-        # Expected Response:
-        # <myclimate><response>provision</provision><user>...</user><status>1</status></myclimate>
-
-        # Check if the message is a discovery response
         if root.find('response') is not None and root.find('response').text == 'discovery':
             self._parent._connected = True
 
+        # Expected Response:
+        # <myclimate><response>provision</provision><user>...</user><status>1</status></myclimate>
         provision = root.find('response') is not None and root.find('response').text == 'provision'
         if provision:
             print("We got a provision response, woo!!")
@@ -94,7 +91,7 @@ class BonairePyClimate():
 
             while not self._connected:
 
-                cooloff_timer = 0 if attempts < 3 else 60 if attempts < 6 else 300
+                cooloff_timer = 0 if attempts < 3 else 20 if attempts < 6 else 60
                 if attempts > 0: print("Discovery failed, retrying in {}s".format(cooloff_timer + 5))
                 attempts += 1
                 await asyncio.sleep(cooloff_timer)
