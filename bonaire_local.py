@@ -37,13 +37,13 @@ class HandleServer(asyncio.Protocol):
         print("Connected to Wifi Module")
         self._parent._server_transport = transport
         self._transport = transport
-        dat = INSTALLATION.encode()
+        dat = INSTALLATION
         print("Data being sent: {}".format(dat))
-        transport.write(dat)
+        transport.write(dat.encode())
 
-        dat = PROVISION.format(self._parent._wifi_ssid, self._parent._wifi_pword).encode()
+        dat = PROVISION.format(self._parent._wifi_ssid, self._parent._wifi_pword)
         print("Data being sent: {}".format(dat))
-        transport.write(dat)
+        transport.write(dat.encode())
 
     def data_received(self, data):
         message = data.decode()
@@ -58,6 +58,9 @@ class HandleServer(asyncio.Protocol):
             self._parent._connected = True
 
         provision = root.find('response') is not None and root.find('response').text == 'provision'
+        if provision:
+            print("We got a provision response, woo!!")
+            self._parent._provisioned = True
         
 
     def connection_lost(self, exc):
@@ -75,6 +78,7 @@ class BonairePyClimate():
         self._update_callback = None
         self._wifi_ssid = ssid
         self._wifi_pword = pword
+        self._provisioned = False
 
         self._event_loop.create_task(self.start())
 
@@ -84,7 +88,7 @@ class BonairePyClimate():
             lambda: HandleServer(self),
             self._local_ip, LOCAL_PORT)
 
-        while True:
+        while True and not self._provisioned:
 
             attempts = 0
 
@@ -104,10 +108,12 @@ class BonairePyClimate():
                 # Wait for 7 seconds for a response to the discovery broadcast
                 await asyncio.sleep(7)
 
-            await asyncio.sleep(220)
+            await asyncio.sleep(30)
 
             self._connected = False
-            self._server_transport.write(DELETE.encode())
+            dat = DELETE
+            print("Data being sent: {}".format(dat))
+            self._server_transport.write(dat.encode())
 
             await asyncio.sleep(3)
 
