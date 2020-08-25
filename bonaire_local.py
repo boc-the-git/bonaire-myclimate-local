@@ -40,12 +40,10 @@ class HandleServer(asyncio.Protocol):
         dat = INSTALLATION.encode()
         print("Data being sent: {}".format(dat))
         transport.write(dat)
-        # here is where I add the provision
-        print(self._parent._wifi_ssid)
-        dat = PROVISION_OPTUS.encode()
+
+        dat = PROVISION.format(self._parent._wifi_ssid, self._parent._wifi_pword).encode()
         print("Data being sent: {}".format(dat))
         transport.write(dat)
-        print(PROVISION.format(self._parent._wifi_ssid, self._parent._wifi_pword))
 
     def data_received(self, data):
         message = data.decode()
@@ -60,6 +58,7 @@ class HandleServer(asyncio.Protocol):
             self._parent._connected = True
 
         provision = root.find('response') is not None and root.find('response').text == 'provision'
+        
 
     def connection_lost(self, exc):
         print("Server connection lost")
